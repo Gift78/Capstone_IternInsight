@@ -9,4 +9,5 @@ import { InternshipPost } from './entities/post.entity';
   providers: [PostService],
   controllers: [PostController],
 })
+
 export class PostModule {}
