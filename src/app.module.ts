@@ -3,8 +3,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostModule } from './post/post.module';
-import { Connection } from 'typeorm';
 import { config } from 'dotenv';
+import { ReviewModule } from './review/review.module';
+import { TestModule } from './test/test.module';
 
 config({ path: 'database.env' });
 
@@ -17,14 +18,14 @@ config({ path: 'database.env' });
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      entities: [__dirname + '/*/.entity{.ts,.js}'],
-      synchronize: true,
+      entities: [__dirname + '/../**/*.entity.js'],
+      synchronize: false,
     }),
     PostModule,
+    ReviewModule,
+    TestModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {
-  constructor(private connection: Connection) {}
-}
+export class AppModule {}
