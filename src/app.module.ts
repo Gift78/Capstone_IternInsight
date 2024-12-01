@@ -1,11 +1,17 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostModule } from './post/post.module';
 import { config } from 'dotenv';
-import { ReviewModule } from './review/review.module';
-import { TestModule } from './test/test.module';
+import { PostEntity } from './typeorm/entities/post.entity';
+import { PostsModule } from './posts/posts.module';
+import { AdminEntity } from './typeorm/entities/admin.entity';
+import { CompanyEntity } from './typeorm/entities/company.entity';
+import { ReviewsModule } from './reviews/reviews.module';
+import { ReviewEntity } from './typeorm/entities/review.entity';
+import { UserEntity } from './typeorm/entities/user.entity';
+import { CommentEntity } from './typeorm/entities/comment.entity';
+import { LikedEntity } from './typeorm/entities/like.entity';
+import { BookmarkEntity } from './typeorm/entities/bookmark.entity';
+import { CompanysModule } from './companys/companys.module';
 
 config({ path: 'database.env' });
 
@@ -18,14 +24,21 @@ config({ path: 'database.env' });
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      entities: [__dirname + '/../**/*.entity.js'],
-      synchronize: false,
+      entities: [
+        PostEntity,
+        AdminEntity,
+        CompanyEntity,
+        ReviewEntity,
+        UserEntity,
+        CommentEntity,
+        LikedEntity,
+        BookmarkEntity,
+      ],
+      synchronize: true,
     }),
-    PostModule,
-    ReviewModule,
-    TestModule,
+    PostsModule,
+    ReviewsModule,
+    CompanysModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
