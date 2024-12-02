@@ -17,6 +17,9 @@ export class PostEntity {
   @Column()
   title: string;
 
+  @Column({ nullable: true })
+  subtitle: string;
+
   @ManyToOne(() => AdminEntity, (admin) => admin.posts)
   admin: AdminEntity;
 

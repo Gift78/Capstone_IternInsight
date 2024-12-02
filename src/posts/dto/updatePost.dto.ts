@@ -14,6 +14,10 @@ export class updatePostDTO {
 
   @IsOptional()
   @IsString()
+  subtitle?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @IsOptional()

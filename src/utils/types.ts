@@ -1,5 +1,6 @@
 export type CreatePostParams = {
   title: string;
+  subtitle?: string;
   description: string;
   position: string[];
   startDate?: Date;

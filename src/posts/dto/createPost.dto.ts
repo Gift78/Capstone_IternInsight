@@ -14,6 +14,10 @@ export class createPostDTO {
   @IsString()
   title: string;
 
+  @IsOptional()
+  @IsString()
+  subtitle?: string;
+
   @IsNotEmpty()
   @IsString()
   description: string;
