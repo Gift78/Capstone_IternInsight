@@ -33,3 +33,24 @@ export type CreateBookMarkParams = {
   userId: number;
   postId: number;
 };
+
+export type UpdateReviewParams = {
+  userId?: number;
+  title?: string;
+  description: string;
+  date: Date; 
+}
+
+export type CreateQuestionParams = {
+  userId: number;
+  title: string;
+  description: string;
+  date: Date;
+}
+
+export type UpdateQuestionarams = {
+  userId?: number;
+  title?: string;
+  description: string;
+  date: Date; 
+}
