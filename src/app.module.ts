@@ -12,11 +12,16 @@ import { CommentEntity } from './typeorm/entities/comment.entity';
 import { LikedEntity } from './typeorm/entities/like.entity';
 import { BookmarkEntity } from './typeorm/entities/bookmark.entity';
 import { CompanysModule } from './companys/companys.module';
+import { LoginModule } from './login/login.module';
+import { ConfigModule } from '@nestjs/config';
 
 config({ path: 'database.env' });
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST,
@@ -39,6 +44,7 @@ config({ path: 'database.env' });
     PostsModule,
     ReviewsModule,
     CompanysModule,
+    LoginModule,
   ],
 })
 export class AppModule {}
