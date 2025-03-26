@@ -25,7 +25,7 @@ export class PostsController {
   // ผู้ใช้ทุกคน (user, admin) สามารถดูโพสต์ได้
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('user', 'admin') // อนุญาตให้ user และ admin ดูโพสต์ได้
+  @Roles('user', 'admin') 
   getPosts() {
     return this.postService.findPosts();
   }
