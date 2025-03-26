@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsNotEmpty, 
 } from 'class-validator';
 
 export class updatePostDTO {
@@ -46,4 +47,8 @@ export class updatePostDTO {
   @IsOptional()
   @IsNumber()
   companyId?: number;
+
+  @IsOptional()
+  @IsNumber()
+  adminId?: number;
 }

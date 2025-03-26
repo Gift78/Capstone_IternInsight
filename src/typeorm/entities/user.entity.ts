@@ -4,6 +4,7 @@ import { CommentEntity } from './comment.entity';
 import { LikedEntity } from './like.entity';
 import { BookmarkEntity } from './bookmark.entity';
 
+
 @Entity({ name: 'users' })
 export class UserEntity {
   @PrimaryGeneratedColumn()

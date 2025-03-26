@@ -73,22 +73,30 @@ export class PostsService {
 
   async updatePost(
     id: number,
-    { companyId, ...updatePostDetails }: UpdatePostParams,
-  ) {
+    { companyId, adminId, ...updatePostDetails }: UpdatePostParams,
+  ): Promise<{ success: boolean; message: string }> {
     const post = await this.postRepository.findOneBy({ id });
     if (!post) {
       throw new HttpException('Post not Found.', HttpStatus.BAD_REQUEST);
     }
-
+  
     const company = await this.companyRepository.findOneBy({ id: companyId });
     if (!company) {
       throw new HttpException('Company not Found.', HttpStatus.BAD_REQUEST);
     }
+  
     try {
-      await this.postRepository.update(id, {
+      // ลบ adminId ออกจาก updatePostDetails หากไม่ได้ใช้ใน PostEntity
+      const result = await this.postRepository.update(id, {
         ...updatePostDetails,
         company,
       });
+  
+      // ตรวจสอบว่ามีแถวถูกอัปเดตหรือไม่
+      if (result.affected === 0) {
+        throw new HttpException('Failed to update post.', HttpStatus.BAD_REQUEST);
+      }
+  
       return {
         success: true,
         message: 'Successfully updated post',
@@ -96,12 +104,12 @@ export class PostsService {
     } catch (err) {
       return {
         success: false,
-        message: err,
+        message: err.message || 'An error occurred while updating the post',
       };
     }
   }
 
-  async deletePost(id: number): Promise<void> {
+  async deletePost(id: number): Promise<{ message: string }> {
     const post = await this.postRepository.findOne({ where: { id } });
 
     if (!post) {
@@ -109,6 +117,9 @@ export class PostsService {
     }
 
     await this.postRepository.remove(post);
+
+    return { message: `Post with id ${id} has been successfully deleted` };
+
   }
 
   async createBookMark() {}

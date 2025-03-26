@@ -1,9 +1,9 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsNotEmpty, IsString } from 'class-validator';
+import { IsDate, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class updateQuestionDTO {
   @IsNotEmpty()
-  @IsString()
+  @IsNumber()
   userId: number;
 
   @IsNotEmpty()

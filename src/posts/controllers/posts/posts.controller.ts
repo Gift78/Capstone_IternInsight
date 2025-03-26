@@ -7,9 +7,13 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
 import { createPostDTO } from 'src/posts/dto/createPost.dto';
 import { updatePostDTO } from 'src/posts/dto/updatePost.dto';
 import { PostsService } from 'src/posts/services/posts/posts.service';
@@ -17,12 +21,18 @@ import { PostsService } from 'src/posts/services/posts/posts.service';
 @Controller('posts')
 export class PostsController {
   constructor(private postService: PostsService) {}
+
+  // ผู้ใช้ทุกคน (user, admin) สามารถดูโพสต์ได้
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user', 'admin') // อนุญาตให้ user และ admin ดูโพสต์ได้
   getPosts() {
     return this.postService.findPosts();
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user', 'admin') // อนุญาตให้ user และ admin ดูโพสต์ได้
   async getPostById(@Param('id') id: number) {
     if (isNaN(id)) {
       throw new HttpException('Post not found', 404);
@@ -36,16 +46,24 @@ export class PostsController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin') // อนุญาตเฉพาะ admin
   @UsePipes(new ValidationPipe())
   createPost(@Body() createPostDto: createPostDTO) {
-    return this.postService.createPost(createPostDto); //User Authentication
+    return this.postService.createPost(createPostDto);
   }
 
-  @Post('bookmark/:id')
-  @UsePipes(new ValidationPipe())
-  createBookmark() {} //User Authentication
 
+  // @Post('bookmark/:id')
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles('admin')
+  // @UsePipes(new ValidationPipe())
+  // createBookmark() {}
+
+  // เฉพาะ admin เท่านั้นที่สามารถอัปเดตโพสต์ได้
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @UsePipes(new ValidationPipe())
   async updatePost(
     @Param('id') id: number,
@@ -54,11 +72,14 @@ export class PostsController {
     if (isNaN(id)) {
       throw new HttpException('Post not found', 404);
     }
-    return this.postService.updatePost(id, updatePostDto); //User Authentication
+    return this.postService.updatePost(id, updatePostDto);
   }
 
+  // เฉพาะ admin เท่านั้นที่สามารถลบโพสต์ได้
   @Delete(':id')
-  async deletePost(@Param('id') id: number): Promise<void> {
-    return await this.postService.deletePost(id); //User Authentication
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async deletePost(@Param('id') id: number): Promise<{ message: string }> {
+    return await this.postService.deletePost(id);
   }
 }

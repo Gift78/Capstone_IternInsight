@@ -80,12 +80,18 @@ export class QuestionsService {
     }
   }
 
-  async deleteQuestion(id: number): Promise<void> {
-    const question = await this.reviewRepository.findOne({ where: { id }});
-
+  async deleteQuestion(id: number): Promise<{ success: boolean; message: string }> {
+    const question = await this.reviewRepository.findOne({ where: { id } });
+  
     if (!question) {
       throw new NotFoundException(`Question not found`);
     }
+  
     await this.reviewRepository.remove(question);
+  
+    return {
+      success: true,
+      message: `Question with id ${id} has been successfully deleted`,
+    };
   }
 }

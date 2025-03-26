@@ -14,6 +14,7 @@ export class ReviewsService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
   ) {}
+  
   findReviews(): Promise<ReviewEntity[]> {
     return this.reviewRepository.find({ where: { isQuestion: false } });
   }
@@ -79,14 +80,18 @@ export class ReviewsService {
     }
   }
 
-  async deleteReview(id: number): Promise<void> {
-    const review = await this.reviewRepository.findOne({ where: { id }});
-
+  async deleteReview(id: number): Promise<{ success: boolean; message: string }> {
+    const review = await this.reviewRepository.findOne({ where: { id } });
+  
     if (!review) {
       throw new NotFoundException(`Review not found`);
     }
+  
     await this.reviewRepository.remove(review);
+  
+    return {
+      success: true,
+      message: `Review with id ${id} has been successfully deleted`,
+    };
   }
-
-
 }

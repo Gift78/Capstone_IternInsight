@@ -11,16 +11,18 @@ export type CreatePostParams = {
   companyId: number;
 };
 
-export type UpdatePostParams = {
+export interface UpdatePostParams {
   title?: string;
+  subtitle?: string;
   description?: string;
   position?: string[];
   startDate?: Date;
+  endDate?: Date;
   email?: string;
   tel?: string;
-  endDate?: Date;
-  companyId?: number;
-};
+  companyId?: number; // เปลี่ยนจาก required เป็น optional
+  adminId?: number;
+}
 
 export type CreateReviewParams = {
   userId: number;
