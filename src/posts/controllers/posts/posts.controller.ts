@@ -22,17 +22,12 @@ import { PostsService } from 'src/posts/services/posts/posts.service';
 export class PostsController {
   constructor(private postService: PostsService) {}
 
-  // ผู้ใช้ทุกคน (user, admin) สามารถดูโพสต์ได้
-  @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('user', 'admin') 
+  @Get() 
   getPosts() {
     return this.postService.findPosts();
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('user', 'admin') // อนุญาตให้ user และ admin ดูโพสต์ได้
   async getPostById(@Param('id') id: number) {
     if (isNaN(id)) {
       throw new HttpException('Post not found', 404);
