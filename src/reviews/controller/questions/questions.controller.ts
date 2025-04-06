@@ -23,6 +23,7 @@ import { Roles } from 'src/auth/roles.decorator';
 @Controller('questions')
 export class QuestionsController {
   constructor(private questionService: QuestionsService) {}
+  
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'admin')
@@ -35,6 +36,16 @@ export class QuestionsController {
   @Roles('user', 'admin')
   async getReviewById(@Param('id') id: number) {
     return this.questionService.findQuestionById(id);
+  }
+
+  @Get('user/all')
+  async getAllQuestionsForUsers() {
+    return this.questionService.findQuestions();
+  }
+
+  @Get('user/:userId')
+  async getQuestionsByUserId(@Param('userId', ParseIntPipe) userId: number) {
+    return this.questionService.findQuestionsByUserId(userId);
   }
 
   @Post()

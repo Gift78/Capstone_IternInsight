@@ -14,13 +14,28 @@ export class QuestionsService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
   ) {}
-  findQuestions(): Promise<ReviewEntity[]> {
-    return this.reviewRepository.find({ where: { isQuestion: true } });
-  }
 
+  async findQuestions(): Promise<ReviewEntity[]> {
+    return this.reviewRepository.find({
+      where: { isQuestion: true },
+      relations: ['user'], // Load related user data
+    });
+  }
   async findQuestionById(id: number): Promise<ReviewEntity | undefined> {
     return this.reviewRepository.findOne({
       where: { id: id, isQuestion: true },
+    });
+  }
+  
+  async findQuestionsByUserId(userId: number): Promise<ReviewEntity[]> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    return this.reviewRepository.find({
+      where: { user: { id: userId }, isQuestion: true },
+      relations: ['user'], // Load related user data
     });
   }
 

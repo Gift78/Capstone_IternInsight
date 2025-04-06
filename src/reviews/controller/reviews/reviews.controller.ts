@@ -37,6 +37,16 @@ export class ReviewsController {
     return this.reviewService.findReviewById(id);
   }
 
+  @Get('user/all')
+  async getAllReviewsForUsers() {
+    return this.reviewService.findReviews();
+  }
+
+  @Get('user/:userId')
+  async getReviewsByUserId(@Param('userId', ParseIntPipe) userId: number) {
+    return this.reviewService.findReviewsByUserId(userId);
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'admin')
@@ -44,6 +54,7 @@ export class ReviewsController {
   async createReview(@Body() createReviewDto: createReviewDTO) {
     return this.reviewService.createReview(createReviewDto);
   }
+
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)

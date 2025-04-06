@@ -15,13 +15,30 @@ export class ReviewsService {
     private userRepository: Repository<UserEntity>,
   ) {}
   
-  findReviews(): Promise<ReviewEntity[]> {
-    return this.reviewRepository.find({ where: { isQuestion: false } });
+  async findReviews(): Promise<ReviewEntity[]> {
+    const reviews = await this.reviewRepository.find({
+      where: { isQuestion: false },
+      relations: ['user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
+    });
+    console.log('Fetched Reviews:', reviews); // Debug: ดูข้อมูลที่ดึงมา
+    return reviews;
   }
 
   async findReviewById(id: number): Promise<ReviewEntity | undefined> {
     return this.reviewRepository.findOne({
       where: { id: id, isQuestion: false },
+    });
+  }
+
+  async findReviewsByUserId(userId: number): Promise<ReviewEntity[]> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+  
+    return this.reviewRepository.find({
+      where: { user: { id: userId }, isQuestion: false },
+      relations: ['user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
     });
   }
 
