@@ -1,3 +1,5 @@
+import e from "express";
+
 export type CreatePostParams = {
   title: string;
   subtitle?: string;
@@ -55,4 +57,28 @@ export type UpdateQuestionarams = {
   title?: string;
   description: string;
   date: Date; 
+}
+
+export type CreateUserParams = {
+  adminId: number;
+  userId?: number;
+  name: string;
+  email: string;
+  username: string;
+  password: string;
+  phone: string;
+  position: string;
+  description: string;
+}
+
+export type UpdateUserParams = {
+  adminId: number;
+  userId?: number;
+  name?: string;
+  email?: string;
+  username?: string;
+  password?: string;
+  phone?: string;
+  position?: string;
+  description?: string;
 }

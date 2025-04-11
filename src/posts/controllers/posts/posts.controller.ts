@@ -22,7 +22,8 @@ import { PostsService } from 'src/posts/services/posts/posts.service';
 export class PostsController {
   constructor(private postService: PostsService) {}
 
-  @Get() 
+  
+  @Get()
   getPosts() {
     return this.postService.findPosts();
   }
@@ -33,12 +34,12 @@ export class PostsController {
       throw new HttpException('Post not found', 404);
     }
 
-    const post = await this.postService.findPostById(id);
-    if (!post) {
-      throw new HttpException('Post not found', 404);
-    }
-    return post;
+  const post = await this.postService.findPostById(id);
+  if (!post) {
+    throw new HttpException('Post not found', 404);
   }
+  return post;
+}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

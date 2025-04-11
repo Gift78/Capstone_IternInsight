@@ -7,8 +7,8 @@ export class BookmarkEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => UserEntity, (user) => user.bookmark)
-  user: UserEntity;
+  // @ManyToOne(() => UserEntity, (user) => user.bookmark)
+  // user: UserEntity;
 
   @ManyToOne(() => PostEntity, (post) => post.bookmark)
   post: PostEntity;

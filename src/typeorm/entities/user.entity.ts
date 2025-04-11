@@ -19,10 +19,7 @@ export class UserEntity {
   @OneToMany(() => LikedEntity, (like) => like.user, { cascade: true })
   like: LikedEntity[];
 
-  @OneToMany(() => BookmarkEntity, (bookmark) => bookmark.user, {
-    cascade: true,
-  })
-  bookmark: BookmarkEntity[];
+  
 
   @Column({ unique: true })
   email: string;
