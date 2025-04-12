@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   HttpException,
-  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -23,7 +22,7 @@ import { Roles } from 'src/auth/roles.decorator';
 @Controller('questions')
 export class QuestionsController {
   constructor(private questionService: QuestionsService) {}
-  
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'admin')
@@ -73,7 +72,30 @@ export class QuestionsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'admin')
-  async deleteQuestion(@Param('id', ParseIntPipe) id: number): Promise<{ success: boolean; message: string }> {
+  async deleteQuestion(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ success: boolean; message: string }> {
     return await this.questionService.deleteQuestion(id);
+  }
+
+  @Post(':questionId/like')
+  async likePost(
+    @Param('questionId') questionId: number,
+    @Body() body: { userId: number },
+  ) {
+    const result = await this.questionService.likeQuestion(
+      questionId,
+      body.userId,
+    );
+    if (result === null) {
+      return { message: 'Post unliked successfully' };
+    }
+    return result;
+  }
+
+  @Get(':questionId/like')
+  async getLikeCount(@Param('questionId') reviewId: number) {
+    const count = await this.questionService.getLikeCount(reviewId);
+    return { likeCount: count };
   }
 }

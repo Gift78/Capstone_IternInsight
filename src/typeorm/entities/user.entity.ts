@@ -2,8 +2,6 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { ReviewEntity } from './review.entity';
 import { CommentEntity } from './comment.entity';
 import { LikedEntity } from './like.entity';
-import { BookmarkEntity } from './bookmark.entity';
-
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -18,8 +16,6 @@ export class UserEntity {
 
   @OneToMany(() => LikedEntity, (like) => like.user, { cascade: true })
   like: LikedEntity[];
-
-  
 
   @Column({ unique: true })
   email: string;

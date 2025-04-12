@@ -1,5 +1,11 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { LikedEntity } from 'src/typeorm/entities/like.entity';
 import { ReviewEntity } from 'src/typeorm/entities/review.entity';
 import { UserEntity } from 'src/typeorm/entities/user.entity';
 import { CreateQuestionParams, UpdateQuestionarams } from 'src/utils/types';
@@ -13,6 +19,9 @@ export class QuestionsService {
 
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+
+    @InjectRepository(LikedEntity)
+    private likedRepository: Repository<LikedEntity>,
   ) {}
 
   async findQuestions(): Promise<ReviewEntity[]> {
@@ -26,7 +35,7 @@ export class QuestionsService {
       where: { id: id, isQuestion: true },
     });
   }
-  
+
   async findQuestionsByUserId(userId: number): Promise<ReviewEntity[]> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
@@ -39,7 +48,10 @@ export class QuestionsService {
     });
   }
 
-  async createQuestion({ userId, ...createQuestionDetails }: CreateQuestionParams) {
+  async createQuestion({
+    userId,
+    ...createQuestionDetails
+  }: CreateQuestionParams) {
     const user = await this.userRepository.findOneBy({ id: userId });
     if (!user)
       throw new HttpException(
@@ -87,7 +99,7 @@ export class QuestionsService {
         succes: true,
         message: 'Successfully update question',
       };
-    }catch (err) {
+    } catch (err) {
       return {
         seccess: false,
         message: err,
@@ -95,18 +107,53 @@ export class QuestionsService {
     }
   }
 
-  async deleteQuestion(id: number): Promise<{ success: boolean; message: string }> {
+  async deleteQuestion(
+    id: number,
+  ): Promise<{ success: boolean; message: string }> {
     const question = await this.reviewRepository.findOne({ where: { id } });
-  
+
     if (!question) {
       throw new NotFoundException(`Question not found`);
     }
-  
+
     await this.reviewRepository.remove(question);
-  
+
     return {
       success: true,
       message: `Question with id ${id} has been successfully deleted`,
     };
+  }
+
+  async likeQuestion(
+    reviewId: number,
+    userId: number,
+  ): Promise<LikedEntity | null> {
+    const review = await this.reviewRepository.findOne({
+      where: { id: reviewId, isQuestion: true },
+      relations: ['like'], // Use the correct property name here
+    });
+
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!review || !user) throw new NotFoundException('Post or User not found');
+
+    const existingLike = review.like.find((like) => like.user.id === user.id); // again, use `likes`
+
+    if (existingLike) {
+      await this.likedRepository.remove(existingLike);
+      return null; // Disliked (unliked)
+    }
+
+    const like = new LikedEntity();
+    like.review = review;
+    like.user = user;
+
+    return await this.likedRepository.save(like);
+  }
+
+  async getLikeCount(reviewId: number): Promise<number> {
+    const count = await this.likedRepository.count({
+      where: { review: { id: reviewId, isQuestion: true } },
+    });
+    return count;
   }
 }

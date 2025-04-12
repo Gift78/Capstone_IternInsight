@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToMany,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { UserEntity } from './user.entity';
 import { ReviewEntity } from './review.entity';
 
@@ -10,7 +16,7 @@ export class CommentEntity {
   @ManyToOne(() => UserEntity, (user) => user.comment)
   user: UserEntity;
 
-  @ManyToOne(() => ReviewEntity, (review) => review.comment)
+  @ManyToMany(() => ReviewEntity, (review) => review.comment)
   review: ReviewEntity;
 
   @Column()

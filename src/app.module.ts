@@ -13,12 +13,10 @@ import { LikedEntity } from './typeorm/entities/like.entity';
 import { BookmarkEntity } from './typeorm/entities/bookmark.entity';
 import { CompanysModule } from './companys/companys.module';
 import { LoginModule } from './login/login.module';
-import { ConfigModule } from '@nestjs/config'; 
-import { RegisterModule } from './register/register.module'; 
+import { ConfigModule } from '@nestjs/config';
+import { RegisterModule } from './register/register.module';
 
-config({ path: 'database.env' });
-
-
+config({ path: '.env' });
 
 @Module({
   imports: [
@@ -47,7 +45,7 @@ config({ path: 'database.env' });
     PostsModule,
     ReviewsModule,
     CompanysModule,
-    LoginModule, 
+    LoginModule,
     RegisterModule, // Add RegisterModule to the imports array
   ],
 })
