@@ -22,7 +22,7 @@ import { ReviewsService } from 'src/reviews/services/reviews/reviews.service';
 @Controller('reviews')
 export class ReviewsController {
   constructor(private reviewService: ReviewsService) {}
-  
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'admin')
@@ -55,13 +55,12 @@ export class ReviewsController {
     return this.reviewService.createReview(createReviewDto);
   }
 
-
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'admin')
   @UsePipes(new ValidationPipe())
   async updateReview(
-    @Param('id', ParseIntPipe) id: number, 
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateReviewDto: updateReviewDTO,
   ) {
     if (isNaN(id)) {
@@ -73,7 +72,27 @@ export class ReviewsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('user', 'admin')
-  async deleteReview(@Param('id') id: number): Promise<{ success: boolean; message: string }> {
+  async deleteReview(
+    @Param('id') id: number,
+  ): Promise<{ success: boolean; message: string }> {
     return await this.reviewService.deleteReview(id);
+  }
+
+  @Post(':reviewId/like')
+  async likePost(
+    @Param('reviewId') reviewId: number,
+    @Body() body: { userId: number },
+  ) {
+    const result = await this.reviewService.likeReview(reviewId, body.userId);
+    if (result === null) {
+      return { message: 'Post unliked successfully' };
+    }
+    return result;
+  }
+
+  @Get(':reviewId/like')
+  async getLikeCount(@Param('reviewId') reviewId: number) {
+    const count = await this.reviewService.getLikeCount(reviewId);
+    return { likeCount: count };
   }
 }

@@ -1,5 +1,11 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { LikedEntity } from 'src/typeorm/entities/like.entity';
 import { ReviewEntity } from 'src/typeorm/entities/review.entity';
 import { UserEntity } from 'src/typeorm/entities/user.entity';
 import { CreateReviewParams, UpdateReviewParams } from 'src/utils/types';
@@ -13,8 +19,11 @@ export class ReviewsService {
 
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+
+    @InjectRepository(LikedEntity)
+    private likedRepository: Repository<LikedEntity>,
   ) {}
-  
+
   async findReviews(): Promise<ReviewEntity[]> {
     const reviews = await this.reviewRepository.find({
       where: { isQuestion: false },
@@ -35,7 +44,7 @@ export class ReviewsService {
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
-  
+
     return this.reviewRepository.find({
       where: { user: { id: userId }, isQuestion: false },
       relations: ['user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
@@ -76,7 +85,7 @@ export class ReviewsService {
       throw new HttpException('Review not Found', HttpStatus.BAD_REQUEST);
     }
 
-    const user = await this.userRepository.findOneBy({ id: userId});
+    const user = await this.userRepository.findOneBy({ id: userId });
     if (!user) {
       throw new HttpException('User not Found.', HttpStatus.BAD_REQUEST);
     }
@@ -89,7 +98,7 @@ export class ReviewsService {
         success: true,
         message: 'Successfully updated review',
       };
-    }catch (err) {
+    } catch (err) {
       return {
         seccess: false,
         message: err,
@@ -97,18 +106,53 @@ export class ReviewsService {
     }
   }
 
-  async deleteReview(id: number): Promise<{ success: boolean; message: string }> {
+  async deleteReview(
+    id: number,
+  ): Promise<{ success: boolean; message: string }> {
     const review = await this.reviewRepository.findOne({ where: { id } });
-  
+
     if (!review) {
       throw new NotFoundException(`Review not found`);
     }
-  
+
     await this.reviewRepository.remove(review);
-  
+
     return {
       success: true,
       message: `Review with id ${id} has been successfully deleted`,
     };
+  }
+
+  async likeReview(
+    reviewId: number,
+    userId: number,
+  ): Promise<LikedEntity | null> {
+    const review = await this.reviewRepository.findOne({
+      where: { id: reviewId, isQuestion: false },
+      relations: ['like', 'like.user'], // Use the correct property name here
+    });
+
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!review || !user) throw new NotFoundException('Post or User not found');
+
+    const existingLike = review.like.find((like) => like.user.id === user.id); // again, use `likes`
+
+    if (existingLike) {
+      await this.likedRepository.remove(existingLike);
+      return null; // Disliked (unliked)
+    }
+
+    const like = new LikedEntity();
+    like.review = review;
+    like.user = user;
+
+    return await this.likedRepository.save(like);
+  }
+
+  async getLikeCount(reviewId: number): Promise<number> {
+    const count = await this.likedRepository.count({
+      where: { review: { id: reviewId, isQuestion: false } },
+    });
+    return count;
   }
 }

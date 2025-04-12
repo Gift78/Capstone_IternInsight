@@ -13,10 +13,8 @@ export class RolesGuard extends JwtAuthGuard implements CanActivate {
     //console.log('Roles from @Roles:', roles);
     if (!roles) {
       return true; // หากไม่มี roles ที่กำหนดไว้ใน @Roles, อนุญาตให้เข้าถึง
-
     }
 
-    
     const request = context.switchToHttp().getRequest();
     const user = request.user; // ดึงข้อมูล user จาก request
     //console.log('User from JWT:', user);

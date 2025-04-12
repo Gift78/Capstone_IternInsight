@@ -5,7 +5,6 @@ import { UserEntity } from 'src/typeorm/entities/user.entity';
 import { AdminEntity } from 'src/typeorm/entities/admin.entity';
 import { JwtService } from '@nestjs/jwt';
 
-
 @Injectable()
 export class LoginService {
   constructor(
@@ -33,7 +32,7 @@ export class LoginService {
   async login(user: any) {
     const payload = { username: user.username, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7h' });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '1d' });
 
     return {
       user,
@@ -45,22 +44,27 @@ export class LoginService {
   async refreshToken(refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken);
-      let user: UserEntity | AdminEntity | null = await this.userRepository.findOne({ where: { id: payload.sub } });
+      let user: UserEntity | AdminEntity | null =
+        await this.userRepository.findOne({ where: { id: payload.sub } });
       let role = 'user';
       if (!user) {
-        user = await this.adminRepository.findOne({ where: { id: payload.sub } });
+        user = await this.adminRepository.findOne({
+          where: { id: payload.sub },
+        });
         role = 'admin';
       }
       if (!user) {
         throw new Error('User not found');
       }
       const newPayload = { username: user.username, sub: user.id, role: role };
-      const newAccessToken = this.jwtService.sign(newPayload, { expiresIn: '15m' });
+      const newAccessToken = this.jwtService.sign(newPayload, {
+        expiresIn: '1h',
+      });
       return {
         access_token: newAccessToken,
       };
     } catch (e) {
-      throw new Error('Invalid refresh token');
+      throw new Error('Invalid refresh token' + e.message);
     }
   }
 }

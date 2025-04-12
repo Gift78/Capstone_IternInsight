@@ -17,7 +17,4 @@ export class AdminEntity {
 
   @OneToMany(() => PostEntity, (post) => post.admin, { cascade: true })
   posts: PostEntity[];
-
-  @OneToMany(() => AdminEntity, (comment) => comment.admin, { cascade: true })
-  admin: AdminEntity[];
 }
