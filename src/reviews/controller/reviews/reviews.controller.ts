@@ -64,21 +64,63 @@ export class ReviewsController {
   async updateReview(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateReviewDto: updateReviewDTO,
+    @Request() req, // ใช้เพื่อดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
   ) {
-    if (isNaN(id)) {
+    const currentUserId = req.user.userId; // ดึง ID ของผู้ใช้ที่ล็อกอินอยู่
+    const review = await this.reviewService.findReviewById(id);
+  
+    if (!review) {
       throw new HttpException('Review not found', 404);
     }
-    return this.reviewService.updateReview(id, updateReviewDto);
+  
+    if (review.user.id !== currentUserId) {
+      throw new HttpException(
+        'You can only update your own review',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+  
+    const updatedReview = await this.reviewService.updateReview(id, updateReviewDto);
+
+    // เพิ่มข้อความตอบกลับเมื่อการอัปเดตสำเร็จ
+    return {
+      success: true,
+      message: 'Review updated successfully',
+      updatedReview,
+    };
   }
 
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('user', 'admin')
-  async deleteReview(
-    @Param('id') id: number,
-  ): Promise<{ success: boolean; message: string }> {
-    return await this.reviewService.deleteReview(id);
+@Delete(':id')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('user', 'admin')
+async deleteReview(
+  @Param('id', ParseIntPipe) id: number,
+  @Request() req, // ใช้เพื่อดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
+): Promise<{ success: boolean; message: string }> {
+  const currentUserId = req.user.userId; // ID ของผู้ใช้ที่ล็อกอินอยู่
+  const review = await this.reviewService.findReviewById(id);
+
+  if (!review) {
+    throw new HttpException('Review not found', 404);
   }
+
+  // ตรวจสอบว่ารีวิวนี้เป็นของผู้ใช้ที่ล็อกอินอยู่
+  if (review.user.id !== currentUserId) {
+    throw new HttpException(
+      'You can only delete your own review',
+      HttpStatus.FORBIDDEN,
+
+    );
+  }
+
+  await this.reviewService.deleteReview(id);
+
+  // เพิ่มข้อความตอบกลับเมื่อการลบสำเร็จ
+  return {
+    success: true,
+    message: 'Review deleted successfully',
+  };
+}
 
   @Post(':reviewId/like')
   @UseGuards(JwtAuthGuard, RolesGuard)

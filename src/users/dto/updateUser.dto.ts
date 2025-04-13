@@ -10,25 +10,27 @@ import {
 } from 'class-validator';
 
 export class updateUsersDTO {
-  @IsNotEmpty()
+  @IsOptional()
     @IsString()
-    description: string;
+    description?: string;
   
-    @IsNotEmpty()
-    @IsArray()
-    @ArrayNotEmpty()
+    @IsOptional()
     @IsString({ each: true })
-    position: string;
+    position?: string;
   
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    email: string;
+    email?: string;
   
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    phone: string;
+    phone?: string;
   
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
-    adminId: number;
+    adminId?: number;
+
+    @IsOptional()
+    @IsString()
+    image?: string;
 }

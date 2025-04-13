@@ -37,4 +37,7 @@ export class UserEntity {
 
   @Column({ nullable: true })
   description: string;
+
+  @Column()
+  image: string;
 }

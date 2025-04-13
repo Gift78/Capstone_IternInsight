@@ -41,6 +41,7 @@ export class ReviewsService {
   async findReviewById(id: number): Promise<ReviewEntity | undefined> {
     return this.reviewRepository.findOne({
       where: { id: id, isQuestion: false },
+      relations: ['user'],
     });
   }
 
