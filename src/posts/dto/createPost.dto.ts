@@ -53,4 +53,8 @@ export class createPostDTO {
   @IsNotEmpty()
   @IsNumber()
   companyId: number;
+
+  @IsOptional()
+  @IsString()
+  image: string;
 }

@@ -48,4 +48,7 @@ export class PostEntity {
 
   @Column()
   tel: string;
+
+  @Column()
+  image: string;
 }

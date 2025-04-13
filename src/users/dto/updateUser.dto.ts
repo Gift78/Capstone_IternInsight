@@ -29,4 +29,8 @@ export class updateUsersDTO {
     @IsOptional()
     @IsNumber()
     adminId?: number;
+
+    @IsOptional()
+    @IsString()
+    image?: string;
 }

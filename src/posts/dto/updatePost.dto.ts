@@ -51,4 +51,8 @@ export class updatePostDTO {
   @IsOptional()
   @IsNumber()
   adminId?: number;
+
+  @IsOptional()
+  @IsString()
+  image?: string;
 }
