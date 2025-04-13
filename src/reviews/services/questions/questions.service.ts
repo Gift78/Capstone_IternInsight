@@ -5,6 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createCommentDTO } from 'src/reviews/dto/createComment.dto';
+import { CommentEntity } from 'src/typeorm/entities/comment.entity';
 import { LikedEntity } from 'src/typeorm/entities/like.entity';
 import { ReviewEntity } from 'src/typeorm/entities/review.entity';
 import { UserEntity } from 'src/typeorm/entities/user.entity';
@@ -22,6 +24,9 @@ export class QuestionsService {
 
     @InjectRepository(LikedEntity)
     private likedRepository: Repository<LikedEntity>,
+
+    @InjectRepository(CommentEntity)
+    private commentRepository: Repository<CommentEntity>,
   ) {}
 
   async findQuestions(): Promise<ReviewEntity[]> {
@@ -130,17 +135,17 @@ export class QuestionsService {
   ): Promise<LikedEntity | null> {
     const review = await this.reviewRepository.findOne({
       where: { id: reviewId, isQuestion: true },
-      relations: ['like'], // Use the correct property name here
+      relations: ['like', 'like.user'],
     });
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!review || !user) throw new NotFoundException('Post or User not found');
 
-    const existingLike = review.like.find((like) => like.user.id === user.id); // again, use `likes`
+    const existingLike = review.like.find((like) => like.user.id === user.id);
 
     if (existingLike) {
       await this.likedRepository.remove(existingLike);
-      return null; // Disliked (unliked)
+      return null;
     }
 
     const like = new LikedEntity();
@@ -155,5 +160,24 @@ export class QuestionsService {
       where: { review: { id: reviewId, isQuestion: true } },
     });
     return count;
+  }
+
+  async CommnentQuestion(comment: createCommentDTO) {
+    const review = await this.reviewRepository.findOne({
+      where: { id: comment.review, isQuestion: true },
+    });
+
+    const user = await this.userRepository.findOne({
+      where: { id: comment.user },
+    });
+    if (!review || !user) throw new NotFoundException('Post or User not found');
+
+    const newComment = this.commentRepository.create({
+      date: comment.date,
+      text: comment.text,
+      user,
+      review,
+    });
+    return await this.commentRepository.save(newComment);
   }
 }

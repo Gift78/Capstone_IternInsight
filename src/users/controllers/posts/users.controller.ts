@@ -49,6 +49,11 @@ export class UsersController {
   ) {
     const currentUserId = req.user.id; // ID ของผู้ใช้ที่ล็อกอินอยู่
     const currentUserRole = req.user.role; // Role ของผู้ใช้ที่ล็อกอินอยู่
-    return this.userService.updateUser(id, updateUsersDto, currentUserId, currentUserRole);
+    return this.userService.updateUser(
+      id,
+      updateUsersDto,
+      currentUserId,
+      currentUserRole,
+    );
   }
 }

@@ -22,7 +22,6 @@ import { PostsService } from 'src/posts/services/posts/posts.service';
 export class PostsController {
   constructor(private postService: PostsService) {}
 
-  
   @Get()
   getPosts() {
     return this.postService.findPosts();
@@ -34,12 +33,12 @@ export class PostsController {
       throw new HttpException('Post not found', 404);
     }
 
-  const post = await this.postService.findPostById(id);
-  if (!post) {
-    throw new HttpException('Post not found', 404);
+    const post = await this.postService.findPostById(id);
+    if (!post) {
+      throw new HttpException('Post not found', 404);
+    }
+    return post;
   }
-  return post;
-}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -48,7 +47,6 @@ export class PostsController {
   createPost(@Body() createPostDto: createPostDTO) {
     return this.postService.createPost(createPostDto);
   }
-
 
   // @Post('bookmark/:id')
   // @UseGuards(JwtAuthGuard, RolesGuard)

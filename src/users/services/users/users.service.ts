@@ -15,7 +15,6 @@ export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-
   ) {}
 
   async findUsers(): Promise<UserEntity[]> {
@@ -35,7 +34,9 @@ export class UsersService {
   }
 
   // ดึงข้อมูลผู้ใช้ตามเงื่อนไข
-  async findUsersByCondition(condition: Partial<UserEntity>): Promise<UserEntity[]> {
+  async findUsersByCondition(
+    condition: Partial<UserEntity>,
+  ): Promise<UserEntity[]> {
     return this.userRepository.find({
       where: condition,
       relations: ['user'], // โหลดข้อมูลรีวิวที่เกี่ยวข้องกับผู้ใช้ (ถ้ามี)
@@ -52,7 +53,7 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-  
+
     // ตรวจสอบสิทธิ์: admin สามารถแก้ไขผู้ใช้คนอื่นได้, user สามารถแก้ไขตัวเองได้เท่านั้น
     if (currentUserRole !== 'admin' && currentUserId !== id) {
       throw new HttpException(
@@ -60,9 +61,9 @@ export class UsersService {
         HttpStatus.FORBIDDEN,
       );
     }
-  
+
     Object.assign(user, updateUserDetails);
-  
+
     try {
       await this.userRepository.save(user);
       return {

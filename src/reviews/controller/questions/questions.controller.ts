@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -18,6 +19,8 @@ import { QuestionsService } from 'src/reviews/services/questions/questions.servi
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
+import { Request } from 'express';
+import { createCommentDTO } from 'src/reviews/dto/createComment.dto';
 
 @Controller('questions')
 export class QuestionsController {
@@ -78,15 +81,15 @@ export class QuestionsController {
     return await this.questionService.deleteQuestion(id);
   }
 
-  @Post(':questionId/like')
+  @Post(':reviewId/like')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user', 'admin')
   async likePost(
-    @Param('questionId') questionId: number,
-    @Body() body: { userId: number },
+    @Param('reviewId') reviewId: number,
+    @Req() req: Request & { user: { userId: number; username: string } },
   ) {
-    const result = await this.questionService.likeQuestion(
-      questionId,
-      body.userId,
-    );
+    const userId = req.user.userId;
+    const result = await this.questionService.likeQuestion(reviewId, userId);
     if (result === null) {
       return { message: 'Post unliked successfully' };
     }
@@ -97,5 +100,26 @@ export class QuestionsController {
   async getLikeCount(@Param('questionId') reviewId: number) {
     const count = await this.questionService.getLikeCount(reviewId);
     return { likeCount: count };
+  }
+
+  @Post(':reviewId/comment')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user', 'admin')
+  async CommentPost(
+    @Param('reviewId') reviewId: number,
+    @Req() req,
+    @Body() { text, date }: createCommentDTO,
+  ) {
+    const userId = req.user.userId;
+    const commentContent = {
+      user: userId,
+      review: reviewId,
+      text,
+      date: new Date(date ?? new Date()),
+    };
+
+    const result = await this.questionService.CommnentQuestion(commentContent);
+
+    return result;
   }
 }

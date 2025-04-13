@@ -7,9 +7,17 @@ import { UserEntity } from 'src/typeorm/entities/user.entity';
 import { QuestionsController } from './controller/questions/questions.controller';
 import { QuestionsService } from './services/questions/questions.service';
 import { LikedEntity } from 'src/typeorm/entities/like.entity';
+import { CommentEntity } from 'src/typeorm/entities/comment.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ReviewEntity, UserEntity, LikedEntity])],
+  imports: [
+    TypeOrmModule.forFeature([
+      ReviewEntity,
+      UserEntity,
+      LikedEntity,
+      CommentEntity,
+    ]),
+  ],
   controllers: [ReviewsController, QuestionsController],
   providers: [ReviewsService, QuestionsService],
 })
