@@ -15,6 +15,7 @@ import { CompanysModule } from './companys/companys.module';
 import { LoginModule } from './login/login.module';
 import { ConfigModule } from '@nestjs/config';
 import { RegisterModule } from './register/register.module';
+import { UsersModule } from './users/users.module';
 
 config({ path: '.env' });
 
@@ -46,7 +47,8 @@ config({ path: '.env' });
     ReviewsModule,
     CompanysModule,
     LoginModule,
-    RegisterModule, // Add RegisterModule to the imports array
+    RegisterModule,
+    UsersModule 
   ],
 })
 export class AppModule {}

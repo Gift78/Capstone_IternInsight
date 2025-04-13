@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { AdminEntity } from 'src/typeorm/entities/admin.entity';
 import { UserEntity } from 'src/typeorm/entities/user.entity';
+import { updateUsersDTO } from 'src/users/dto/updateUser.dto';
 import { CreateUserParams, UpdateUserParams } from 'src/utils/types';
 import { Repository } from 'typeorm';
 
@@ -20,7 +21,6 @@ export class UsersService {
 
   async findUsers(): Promise<UserEntity[]> {
     const users = await this.userRepository.find({
-      relations: ['user'], // โหลดข้อมูลรีวิวที่เกี่ยวข้องกับผู้ใช้ (ถ้ามี)
     });
     console.log('Fetched Users:', users); // Debug: ดูข้อมูลที่ดึงมา
     return users;
@@ -30,7 +30,6 @@ export class UsersService {
   async findUserById(id: number): Promise<UserEntity | undefined> {
     return this.userRepository.findOne({
       where: { id },
-      relations: ['user'], // โหลดข้อมูลรีวิวที่เกี่ยวข้องกับผู้ใช้ (ถ้ามี)
     });
   }
 
@@ -38,27 +37,13 @@ export class UsersService {
   async findUsersByCondition(condition: Partial<UserEntity>): Promise<UserEntity[]> {
     return this.userRepository.find({
       where: condition,
-      relations: ['user'], // โหลดข้อมูลรีวิวที่เกี่ยวข้องกับผู้ใช้ (ถ้ามี)
     });
   }
 
-  async updateUser(
-    id: number,
-    updateUserDetails: UpdateUserParams,
-    currentUserId: number,
-    currentUserRole: string,
-  ) {
+  async updateUser(id: number, updateUserDetails: updateUsersDTO): Promise<any> {
     const user = await this.userRepository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException('User not found');
-    }
-  
-    // ตรวจสอบสิทธิ์: admin สามารถแก้ไขผู้ใช้คนอื่นได้, user สามารถแก้ไขตัวเองได้เท่านั้น
-    if (currentUserRole !== 'admin' && currentUserId !== id) {
-      throw new HttpException(
-        'You can only update your own account',
-        HttpStatus.FORBIDDEN,
-      );
     }
   
     Object.assign(user, updateUserDetails);

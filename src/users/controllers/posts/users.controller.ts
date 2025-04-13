@@ -1,22 +1,20 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpException,
   Param,
   ParseIntPipe,
-  Post,
   Put,
   Request,
   UseGuards,
   UsePipes,
   ValidationPipe,
+  HttpStatus
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
-import { createUsersDTO } from 'src/users/dto/createUser.dto';
 import { updateUsersDTO } from 'src/users/dto/updateUser.dto';
 import { UsersService } from 'src/users/services/users/users.service';
 
@@ -40,15 +38,25 @@ export class UsersController {
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'user') // Only admin or the user themselves can update
+  @Roles('user') // อนุญาตเฉพาะผู้ใช้ที่เป็นเจ้าของข้อมูล
   @UsePipes(new ValidationPipe())
   async updateUser(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateUsersDto: updateUsersDTO,
-    @Request() req, // ดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
-  ) {
-    const currentUserId = req.user.id; // ID ของผู้ใช้ที่ล็อกอินอยู่
-    const currentUserRole = req.user.role; // Role ของผู้ใช้ที่ล็อกอินอยู่
-    return this.userService.updateUser(id, updateUsersDto, currentUserId, currentUserRole);
+  @Param('id', ParseIntPipe) id: number,
+  @Body() updateUsersDto: updateUsersDTO,
+  @Request() req, // ใช้เพื่อดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
+) {
+  const currentUserId = req.user.userId; // ID ของผู้ใช้ที่ล็อกอินอยู่
+  console.log('Current User ID:', currentUserId); // Debug: ดู ID ของผู้ใช้ที่ล็อกอินอยู่
+  
+
+  // ตรวจสอบว่า ID ที่ต้องการแก้ไขตรงกับ ID ของผู้ใช้ที่ล็อกอินอยู่
+  if (id !== currentUserId) {
+    throw new HttpException(
+      'You can only update your own account',
+      HttpStatus.FORBIDDEN,
+    );
   }
+
+  return this.userService.updateUser(id, updateUsersDto);
+}
 }
