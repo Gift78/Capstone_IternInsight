@@ -12,6 +12,8 @@ import {
   UseGuards,
   UsePipes,
   ValidationPipe,
+  Request,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -160,4 +162,74 @@ async deleteReview(
 
     return result;
   }
+
+  @Put(':reviewId/comment/:commentId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user', 'admin')
+  async updateComment(
+  @Param('reviewId', ParseIntPipe) reviewId: number,
+  @Param('commentId', ParseIntPipe) commentId: number,
+  @Req() req,
+  @Body() { text }: createCommentDTO,
+) {
+  const userId = req.user.userId; // ID ของผู้ใช้ที่ล็อกอินอยู่
+  const comment = await this.reviewService.findCommentById(commentId);
+
+  if (!comment) {
+    throw new HttpException('Comment not found', 404);
+  }
+
+  // ตรวจสอบว่า comment นี้เป็นของผู้ใช้ที่ล็อกอินอยู่
+  if (comment.user.id !== userId) {
+    throw new HttpException(
+      'You can only update your own comment',
+      HttpStatus.FORBIDDEN,
+    );
+  }
+
+  const updatedComment = await this.reviewService.updateComment(commentId, { text });
+  return {
+    success: true,
+    message: 'Comment updated successfully',
+    updatedComment,
+  };
 }
+
+@Delete(':reviewId/comment/:commentId')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('user', 'admin')
+async deleteComment(
+  @Param('reviewId', ParseIntPipe) reviewId: number,
+  @Param('commentId', ParseIntPipe) commentId: number,
+  @Req() req,
+): Promise<{ success: boolean; message: string }> {
+  const userId = req.user.userId; // ID ของผู้ใช้ที่ล็อกอินอยู่
+  const comment = await this.reviewService.findCommentById(commentId);
+
+  if (!comment) {
+    throw new HttpException('Comment not found', 404);
+  }
+
+  // ตรวจสอบว่า comment นี้เป็นของผู้ใช้ที่ล็อกอินอยู่
+  if (comment.user.id !== userId) {
+    throw new HttpException(
+      'You can only delete your own comment',
+      HttpStatus.FORBIDDEN,
+    );
+  }
+
+  await this.reviewService.deleteComment(commentId);
+
+  return {
+    success: true,
+    message: 'Comment deleted successfully',
+  };
+}
+
+  @Get(':reviewId/comment')
+  async getComments(@Param('reviewId') reviewId: number) {
+  const comments = await this.reviewService.getComments(reviewId);
+  return { comments };
+  }
+}
+

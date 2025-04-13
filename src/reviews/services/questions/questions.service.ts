@@ -181,4 +181,37 @@ export class QuestionsService {
     });
     return await this.commentRepository.save(newComment);
   }
+
+  async findCommentById(commentId: number): Promise<CommentEntity | undefined> {
+    return this.commentRepository.findOne({
+      where: { id: commentId },
+      relations: ['user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
+    });
+  }
+  
+  async updateComment(commentId: number, updateData: Partial<CommentEntity>): Promise<CommentEntity> {
+    const comment = await this.findCommentById(commentId);
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+  
+    Object.assign(comment, updateData);
+    return this.commentRepository.save(comment);
+  }
+
+  async deleteComment(commentId: number): Promise<void> {
+    const comment = await this.findCommentById(commentId);
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+  
+    await this.commentRepository.remove(comment);
+  }
+
+  async getComments(questionId: number): Promise<CommentEntity[]> {
+    const comments = await this.commentRepository.find({
+      where: { review: { id: questionId } },
+    });
+    return comments;
+  }
 }

@@ -32,11 +32,14 @@ export class ReviewEntity {
   @Column()
   isQuestion: boolean;
 
-  @OneToMany(() => CommentEntity, (comment) => comment.review, {
-    cascade: true,
-  })
+  // @OneToMany(() => CommentEntity, (comment) => comment.review, {
+  //   cascade: true,
+  // })
   comment: CommentEntity;
 
   @OneToMany(() => LikedEntity, (like) => like.review, { cascade: true })
   like: LikedEntity[];
+
+  @OneToMany(() => CommentEntity, (comment) => comment.review, { cascade: true })
+  comments: CommentEntity[];
 }

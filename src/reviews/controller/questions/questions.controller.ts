@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpException,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -12,6 +13,7 @@ import {
   UseGuards,
   UsePipes,
   ValidationPipe,
+  Request,
 } from '@nestjs/common';
 import { createQuestionDTO } from 'src/reviews/dto/createQuestion.dto';
 import { updateQuestionDTO } from 'src/reviews/dto/updateQuestion.dto';
@@ -19,7 +21,7 @@ import { QuestionsService } from 'src/reviews/services/questions/questions.servi
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
-import { Request } from 'express';
+// import { Request } from 'express';
 import { createCommentDTO } from 'src/reviews/dto/createComment.dto';
 
 @Controller('questions')
@@ -164,4 +166,73 @@ export class QuestionsController {
 
     return result;
   }
+
+  @Put(':questionId/comment/:commentId')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('user', 'admin')
+async updateComment(
+  @Param('questionId', ParseIntPipe) questionId: number,
+  @Param('commentId', ParseIntPipe) commentId: number,
+  @Req() req,
+  @Body() { text }: createCommentDTO,
+): Promise<{ success: boolean; message: string; updatedComment: any }> {
+  const userId = req.user.userId; // ID ของผู้ใช้ที่ล็อกอินอยู่
+  const comment = await this.questionService.findCommentById(commentId);
+
+  if (!comment) {
+    throw new HttpException('Comment not found', 404);
+  }
+
+  // ตรวจสอบว่า comment นี้เป็นของผู้ใช้ที่ล็อกอินอยู่
+  if (comment.user.id !== userId) {
+    throw new HttpException(
+      'You can only update your own comment',
+      HttpStatus.FORBIDDEN,
+    );
+  }
+
+  const updatedComment = await this.questionService.updateComment(commentId, { text });
+  return {
+    success: true,
+    message: 'Comment updated successfully',
+    updatedComment,
+  };
+}
+
+@Delete(':questionId/comment/:commentId')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('user', 'admin')
+async deleteComment(
+  @Param('questionId', ParseIntPipe) questionId: number,
+  @Param('commentId', ParseIntPipe) commentId: number,
+  @Req() req,
+): Promise<{ success: boolean; message: string }> {
+  const userId = req.user.userId; // ID ของผู้ใช้ที่ล็อกอินอยู่
+  const comment = await this.questionService.findCommentById(commentId);
+
+  if (!comment) {
+    throw new HttpException('Comment not found', 404);
+  }
+
+  // ตรวจสอบว่า comment นี้เป็นของผู้ใช้ที่ล็อกอินอยู่
+  if (comment.user.id !== userId) {
+    throw new HttpException(
+      'You can only delete your own comment',
+      HttpStatus.FORBIDDEN,
+    );
+  }
+
+  await this.questionService.deleteComment(commentId);
+
+  return {
+    success: true,
+    message: 'Comment deleted successfully',
+  };
+}
+
+  @Get(':questionId/comment')
+  async getComments(@Param('questionId') questionId: number) {
+  const comments = await this.questionService.getComments(questionId);
+  return { comments };
+}
 }
