@@ -16,6 +16,8 @@ import { LoginModule } from './login/login.module';
 import { ConfigModule } from '@nestjs/config';
 import { RegisterModule } from './register/register.module';
 import { UsersModule } from './users/users.module';
+import { MinioClientModule } from './minio-client/minio.module';
+import { FileUploadModule } from './file-upload/file-upload.module';
 
 config({ path: '.env' });
 
@@ -48,7 +50,9 @@ config({ path: '.env' });
     CompanysModule,
     LoginModule,
     RegisterModule,
-    UsersModule 
+    UsersModule,
+    MinioClientModule,
+    FileUploadModule,
   ],
 })
 export class AppModule {}
