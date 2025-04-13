@@ -4,15 +4,14 @@ import {
   Delete,
   Get,
   HttpException,
-  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
   Put,
+  Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
-  Request,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -20,9 +19,7 @@ import { Roles } from 'src/auth/roles.decorator';
 import { updateReviewDTO } from 'src/reviews/dto/updateReview.dto';
 import { createReviewDTO } from 'src/reviews/dto/createReview.dto';
 import { ReviewsService } from 'src/reviews/services/reviews/reviews.service';
-
-
-
+import { createCommentDTO } from 'src/reviews/dto/createComment.dto';
 
 @Controller('reviews')
 export class ReviewsController {
@@ -125,9 +122,42 @@ async deleteReview(
   };
 }
 
+  @Post(':reviewId/like')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user', 'admin')
+  async likePost(@Param('reviewId') reviewId: number, @Req() req) {
+    const userId = req.user.userId;
+    const result = await this.reviewService.likeReview(reviewId, userId);
+    if (result === null) {
+      return { message: 'Post unliked successfully' };
+    }
+    return result;
+  }
+
   @Get(':reviewId/like')
   async getLikeCount(@Param('reviewId') reviewId: number) {
     const count = await this.reviewService.getLikeCount(reviewId);
     return { likeCount: count };
+  }
+
+  @Post(':reviewId/comment')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('user', 'admin')
+  async CommentPost(
+    @Param('reviewId') reviewId: number,
+    @Req() req,
+    @Body() { text, date }: createCommentDTO,
+  ) {
+    const userId = req.user.userId;
+    const commentContent = {
+      user: userId,
+      review: reviewId,
+      text,
+      date: new Date(date ?? new Date()),
+    };
+
+    const result = await this.reviewService.CommnentReview(commentContent);
+
+    return result;
   }
 }

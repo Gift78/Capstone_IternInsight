@@ -1,10 +1,4 @@
-import {
-  Column,
-  Entity,
-  ManyToMany,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { ReviewEntity } from './review.entity';
 
@@ -16,12 +10,12 @@ export class CommentEntity {
   @ManyToOne(() => UserEntity, (user) => user.comment)
   user: UserEntity;
 
-  @ManyToMany(() => ReviewEntity, (review) => review.comment)
+  @ManyToOne(() => ReviewEntity, (review) => review.comment)
   review: ReviewEntity;
 
   @Column()
   text: string;
 
   @Column()
-  date: string;
+  date: Date;
 }

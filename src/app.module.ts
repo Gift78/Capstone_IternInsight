@@ -48,7 +48,7 @@ config({ path: '.env' });
     CompanysModule,
     LoginModule,
     RegisterModule,
-    UsersModule 
+    UsersModule, // Add RegisterModule to the imports array
   ],
 })
 export class AppModule {}
