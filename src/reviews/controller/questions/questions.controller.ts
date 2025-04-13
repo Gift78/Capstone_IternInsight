@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpException,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -11,6 +12,7 @@ import {
   UseGuards,
   UsePipes,
   ValidationPipe,
+  Request,
 } from '@nestjs/common';
 import { createQuestionDTO } from 'src/reviews/dto/createQuestion.dto';
 import { updateQuestionDTO } from 'src/reviews/dto/updateQuestion.dto';
@@ -61,12 +63,31 @@ export class QuestionsController {
   @UsePipes(new ValidationPipe())
   async updateQuestion(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateQuestionDTO: updateQuestionDTO,
+    @Body() updateQuestionDto: updateQuestionDTO,
+    @Request() req,
   ) {
-    if (isNaN(id)) {
+    const currentUserId = req.user.userId; // ดึง ID ของผู้ใช้ที่ล็อกอินอยู่
+    const question = await this.questionService.findQuestionById(id);
+  
+    if (!question) {
       throw new HttpException('Qiestion not found', 404);
     }
-    return this.questionService.updateQuestion(id, updateQuestionDTO);
+  
+    if (question.user.id !== currentUserId) {
+      throw new HttpException(
+        'You can only update your own question',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+  
+    const updatedQuestion = await this.questionService.updateQuestion(id, updateQuestionDto);
+
+    // เพิ่มข้อความตอบกลับเมื่อการอัปเดตสำเร็จ
+    return {
+      success: true,
+      message: 'Question updated successfully',
+      updatedQuestion,
+    };
   }
 
   @Delete(':id')
@@ -74,9 +95,32 @@ export class QuestionsController {
   @Roles('user', 'admin')
   async deleteQuestion(
     @Param('id', ParseIntPipe) id: number,
+    @Request() req, // ใช้เพื่อดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
   ): Promise<{ success: boolean; message: string }> {
-    return await this.questionService.deleteQuestion(id);
+    const currentUserId = req.user.userId; // ID ของผู้ใช้ที่ล็อกอินอยู่
+    const question = await this.questionService.findQuestionById(id);
+  
+    if (!question) {
+      throw new HttpException('Question not found', 404);
+    }
+
+    // ตรวจสอบว่ารีวิวนี้เป็นของผู้ใช้ที่ล็อกอินอยู่
+  if (question.user.id !== currentUserId) {
+    throw new HttpException(
+      'You can only delete your own question',
+      HttpStatus.FORBIDDEN,
+
+    );
   }
+
+  await this.questionService.deleteQuestion(id);
+
+  // เพิ่มข้อความตอบกลับเมื่อการลบสำเร็จ
+  return {
+    success: true,
+    message: 'Question deleted successfully',
+  };
+}
 
   @Post(':questionId/like')
   async likePost(

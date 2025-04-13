@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpException,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -11,6 +12,7 @@ import {
   UseGuards,
   UsePipes,
   ValidationPipe,
+  Request,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -18,6 +20,9 @@ import { Roles } from 'src/auth/roles.decorator';
 import { updateReviewDTO } from 'src/reviews/dto/updateReview.dto';
 import { createReviewDTO } from 'src/reviews/dto/createReview.dto';
 import { ReviewsService } from 'src/reviews/services/reviews/reviews.service';
+
+
+
 
 @Controller('reviews')
 export class ReviewsController {
@@ -62,33 +67,63 @@ export class ReviewsController {
   async updateReview(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateReviewDto: updateReviewDTO,
+    @Request() req, // ใช้เพื่อดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
   ) {
-    if (isNaN(id)) {
+    const currentUserId = req.user.userId; // ดึง ID ของผู้ใช้ที่ล็อกอินอยู่
+    const review = await this.reviewService.findReviewById(id);
+  
+    if (!review) {
       throw new HttpException('Review not found', 404);
     }
-    return this.reviewService.updateReview(id, updateReviewDto);
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('user', 'admin')
-  async deleteReview(
-    @Param('id') id: number,
-  ): Promise<{ success: boolean; message: string }> {
-    return await this.reviewService.deleteReview(id);
-  }
-
-  @Post(':reviewId/like')
-  async likePost(
-    @Param('reviewId') reviewId: number,
-    @Body() body: { userId: number },
-  ) {
-    const result = await this.reviewService.likeReview(reviewId, body.userId);
-    if (result === null) {
-      return { message: 'Post unliked successfully' };
+  
+    if (review.user.id !== currentUserId) {
+      throw new HttpException(
+        'You can only update your own review',
+        HttpStatus.FORBIDDEN,
+      );
     }
-    return result;
+  
+    const updatedReview = await this.reviewService.updateReview(id, updateReviewDto);
+
+    // เพิ่มข้อความตอบกลับเมื่อการอัปเดตสำเร็จ
+    return {
+      success: true,
+      message: 'Review updated successfully',
+      updatedReview,
+    };
   }
+
+@Delete(':id')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('user', 'admin')
+async deleteReview(
+  @Param('id', ParseIntPipe) id: number,
+  @Request() req, // ใช้เพื่อดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
+): Promise<{ success: boolean; message: string }> {
+  const currentUserId = req.user.userId; // ID ของผู้ใช้ที่ล็อกอินอยู่
+  const review = await this.reviewService.findReviewById(id);
+
+  if (!review) {
+    throw new HttpException('Review not found', 404);
+  }
+
+  // ตรวจสอบว่ารีวิวนี้เป็นของผู้ใช้ที่ล็อกอินอยู่
+  if (review.user.id !== currentUserId) {
+    throw new HttpException(
+      'You can only delete your own review',
+      HttpStatus.FORBIDDEN,
+
+    );
+  }
+
+  await this.reviewService.deleteReview(id);
+
+  // เพิ่มข้อความตอบกลับเมื่อการลบสำเร็จ
+  return {
+    success: true,
+    message: 'Review deleted successfully',
+  };
+}
 
   @Get(':reviewId/like')
   async getLikeCount(@Param('reviewId') reviewId: number) {

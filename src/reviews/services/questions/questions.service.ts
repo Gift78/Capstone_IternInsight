@@ -33,6 +33,7 @@ export class QuestionsService {
   async findQuestionById(id: number): Promise<ReviewEntity | undefined> {
     return this.reviewRepository.findOne({
       where: { id: id, isQuestion: true },
+      relations: ['user'],
     });
   }
 
