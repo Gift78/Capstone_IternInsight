@@ -12,8 +12,6 @@ import {
   UseGuards,
   UsePipes,
   ValidationPipe,
-  Request,
-  HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -22,6 +20,7 @@ import { updateReviewDTO } from 'src/reviews/dto/updateReview.dto';
 import { createReviewDTO } from 'src/reviews/dto/createReview.dto';
 import { ReviewsService } from 'src/reviews/services/reviews/reviews.service';
 import { createCommentDTO } from 'src/reviews/dto/createComment.dto';
+import { HttpStatus } from '@nestjs/common';
 
 @Controller('reviews')
 export class ReviewsController {
@@ -66,7 +65,7 @@ export class ReviewsController {
   async updateReview(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateReviewDto: updateReviewDTO,
-    @Request() req, // ใช้เพื่อดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
+    @Req() req, // ใช้เพื่อดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
   ) {
     const currentUserId = req.user.userId; // ดึง ID ของผู้ใช้ที่ล็อกอินอยู่
     const review = await this.reviewService.findReviewById(id);
@@ -97,7 +96,7 @@ export class ReviewsController {
 @Roles('user', 'admin')
 async deleteReview(
   @Param('id', ParseIntPipe) id: number,
-  @Request() req, // ใช้เพื่อดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
+  @Req() req, // ใช้เพื่อดึงข้อมูลผู้ใช้ที่ล็อกอินอยู่
 ): Promise<{ success: boolean; message: string }> {
   const currentUserId = req.user.userId; // ID ของผู้ใช้ที่ล็อกอินอยู่
   const review = await this.reviewService.findReviewById(id);
@@ -106,16 +105,27 @@ async deleteReview(
     throw new HttpException('Review not found', 404);
   }
 
-  // ตรวจสอบว่ารีวิวนี้เป็นของผู้ใช้ที่ล็อกอินอยู่
-  if (review.user.id !== currentUserId) {
+  const isAdmin = req.user.role === 'admin';
+  const isOwner = review.user.id === currentUserId;
+
+  if (!isAdmin && !isOwner) {
     throw new HttpException(
       'You can only delete your own review',
       HttpStatus.FORBIDDEN,
-
     );
   }
+  // delete comment first
+  const comments = await this.reviewService.getComments(id);
+  if (comments) {
+    for (const comment of comments) {
+      await this.reviewService.deleteComment(comment.id);
+    }
+  }
+  // use forceDeleteLike to delete all likes from review
+  await this.reviewService.forceDeleteLike(id);
 
   await this.reviewService.deleteReview(id);
+
 
   // เพิ่มข้อความตอบกลับเมื่อการลบสำเร็จ
   return {
@@ -232,4 +242,3 @@ async deleteComment(
   return { comments };
   }
 }
-

@@ -32,7 +32,7 @@ export class ReviewsService {
   async findReviews(): Promise<ReviewEntity[]> {
     const reviews = await this.reviewRepository.find({
       where: { isQuestion: false },
-      relations: ['user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
+      relations: ['user', 'like', 'like.user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
     });
     console.log('Fetched Reviews:', reviews); // Debug: ดูข้อมูลที่ดึงมา
     return reviews;
@@ -41,7 +41,7 @@ export class ReviewsService {
   async findReviewById(id: number): Promise<ReviewEntity | undefined> {
     return this.reviewRepository.findOne({
       where: { id: id, isQuestion: false },
-      relations: ['user'],
+      relations: ['user', 'like', 'like.user'],
     });
   }
 
@@ -53,7 +53,7 @@ export class ReviewsService {
 
     return this.reviewRepository.find({
       where: { user: { id: userId }, isQuestion: false },
-      relations: ['user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
+      relations: ['user', 'like', 'like.user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
     });
   }
 
@@ -189,6 +189,7 @@ export class ReviewsService {
   async getComments(reviewId: number): Promise<CommentEntity[]> {
     const comments = await this.commentRepository.find({
       where: { review: { id: reviewId } },
+      relations: ['user'],
     });
     return comments;
   }
@@ -217,6 +218,19 @@ export class ReviewsService {
     }
   
     await this.commentRepository.remove(comment);
+  }
+  // create function forceDeleteLike input reviewId: number and remove all like from reviewId
+  async forceDeleteLike(reviewId: number): Promise<void> {
+    const review = await this.reviewRepository.findOne({
+      where: { id: reviewId },
+      relations: ['like'],
+    });
+
+    if (!review) {
+      throw new NotFoundException('Review not found');
+    }
+
+    await this.likedRepository.remove(review.like);
   }
 }
   

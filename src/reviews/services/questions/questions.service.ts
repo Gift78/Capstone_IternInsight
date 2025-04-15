@@ -32,13 +32,13 @@ export class QuestionsService {
   async findQuestions(): Promise<ReviewEntity[]> {
     return this.reviewRepository.find({
       where: { isQuestion: true },
-      relations: ['user'], // Load related user data
+      relations: ['user', 'like', 'like.user']
     });
   }
   async findQuestionById(id: number): Promise<ReviewEntity | undefined> {
     return this.reviewRepository.findOne({
       where: { id: id, isQuestion: true },
-      relations: ['user'],
+      relations: ['user', 'like', 'like.user']
     });
   }
 
@@ -50,8 +50,10 @@ export class QuestionsService {
 
     return this.reviewRepository.find({
       where: { user: { id: userId }, isQuestion: true },
-      relations: ['user'], // Load related user data
-    });
+      relations: ['user', 'like', 'like.user']
+
+      }
+  );
   }
 
   async createQuestion({
@@ -211,7 +213,20 @@ export class QuestionsService {
   async getComments(questionId: number): Promise<CommentEntity[]> {
     const comments = await this.commentRepository.find({
       where: { review: { id: questionId } },
+      relations: ['user', 'review']
     });
     return comments;
+  }
+  async forceDeleteLike(reviewId: number): Promise<void> {
+    const question = await this.reviewRepository.findOne({
+      where: { id: reviewId },
+      relations: ['like'],
+    });
+
+    if (!question) {
+      throw new NotFoundException('question not found');
+    }
+
+    await this.likedRepository.remove(question.like);
   }
 }
