@@ -25,6 +25,7 @@ config({ path: '.env' });
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: 'database.env',
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',

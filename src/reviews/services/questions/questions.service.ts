@@ -5,6 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createCommentDTO } from 'src/reviews/dto/createComment.dto';
+import { CommentEntity } from 'src/typeorm/entities/comment.entity';
 import { LikedEntity } from 'src/typeorm/entities/like.entity';
 import { ReviewEntity } from 'src/typeorm/entities/review.entity';
 import { UserEntity } from 'src/typeorm/entities/user.entity';
@@ -22,18 +24,21 @@ export class QuestionsService {
 
     @InjectRepository(LikedEntity)
     private likedRepository: Repository<LikedEntity>,
+
+    @InjectRepository(CommentEntity)
+    private commentRepository: Repository<CommentEntity>,
   ) {}
 
   async findQuestions(): Promise<ReviewEntity[]> {
     return this.reviewRepository.find({
       where: { isQuestion: true },
-      relations: ['user'], // Load related user data
+      relations: ['user', 'like', 'like.user']
     });
   }
   async findQuestionById(id: number): Promise<ReviewEntity | undefined> {
     return this.reviewRepository.findOne({
       where: { id: id, isQuestion: true },
-      relations: ['user'],
+      relations: ['user', 'like', 'like.user']
     });
   }
 
@@ -45,8 +50,10 @@ export class QuestionsService {
 
     return this.reviewRepository.find({
       where: { user: { id: userId }, isQuestion: true },
-      relations: ['user'], // Load related user data
-    });
+      relations: ['user', 'like', 'like.user']
+
+      }
+  );
   }
 
   async createQuestion({
@@ -131,17 +138,17 @@ export class QuestionsService {
   ): Promise<LikedEntity | null> {
     const review = await this.reviewRepository.findOne({
       where: { id: reviewId, isQuestion: true },
-      relations: ['like'], // Use the correct property name here
+      relations: ['like', 'like.user'],
     });
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!review || !user) throw new NotFoundException('Post or User not found');
 
-    const existingLike = review.like.find((like) => like.user.id === user.id); // again, use `likes`
+    const existingLike = review.like.find((like) => like.user.id === user.id);
 
     if (existingLike) {
       await this.likedRepository.remove(existingLike);
-      return null; // Disliked (unliked)
+      return null;
     }
 
     const like = new LikedEntity();
@@ -156,5 +163,70 @@ export class QuestionsService {
       where: { review: { id: reviewId, isQuestion: true } },
     });
     return count;
+  }
+
+  async CommnentQuestion(comment: createCommentDTO) {
+    const review = await this.reviewRepository.findOne({
+      where: { id: comment.review, isQuestion: true },
+    });
+
+    const user = await this.userRepository.findOne({
+      where: { id: comment.user },
+    });
+    if (!review || !user) throw new NotFoundException('Post or User not found');
+
+    const newComment = this.commentRepository.create({
+      date: comment.date,
+      text: comment.text,
+      user,
+      review,
+    });
+    return await this.commentRepository.save(newComment);
+  }
+
+  async findCommentById(commentId: number): Promise<CommentEntity | undefined> {
+    return this.commentRepository.findOne({
+      where: { id: commentId },
+      relations: ['user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
+    });
+  }
+  
+  async updateComment(commentId: number, updateData: Partial<CommentEntity>): Promise<CommentEntity> {
+    const comment = await this.findCommentById(commentId);
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+  
+    Object.assign(comment, updateData);
+    return this.commentRepository.save(comment);
+  }
+
+  async deleteComment(commentId: number): Promise<void> {
+    const comment = await this.findCommentById(commentId);
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+  
+    await this.commentRepository.remove(comment);
+  }
+
+  async getComments(questionId: number): Promise<CommentEntity[]> {
+    const comments = await this.commentRepository.find({
+      where: { review: { id: questionId } },
+      relations: ['user', 'review']
+    });
+    return comments;
+  }
+  async forceDeleteLike(reviewId: number): Promise<void> {
+    const question = await this.reviewRepository.findOne({
+      where: { id: reviewId },
+      relations: ['like'],
+    });
+
+    if (!question) {
+      throw new NotFoundException('question not found');
+    }
+
+    await this.likedRepository.remove(question.like);
   }
 }
