@@ -37,8 +37,8 @@ export class PostEntity {
   @Column('simple-array')
   position: string[];
 
-  @Column({ nullable: true })
-  startDate: Date;
+  @Column({ type: 'datetime', nullable: true, default: null })
+  startDate: Date | null;
 
   @Column()
   endDate: Date;

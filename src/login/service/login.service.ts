@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { UserEntity } from 'src/typeorm/entities/user.entity';
 import { AdminEntity } from 'src/typeorm/entities/admin.entity';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class LoginService {
@@ -17,12 +18,12 @@ export class LoginService {
 
   async validateUser(username: string, password: string): Promise<any> {
     const user = await this.userRepository.findOne({ where: { username } });
-    if (user && user.password === password) {
+    if (user && (await bcrypt.compare(password, user.password))) {
       return { ...user, role: 'user' };
     }
 
     const admin = await this.adminRepository.findOne({ where: { username } });
-    if (admin && admin.password === password) {
+    if (admin && (await bcrypt.compare(password, admin.password))) {
       return { ...admin, role: 'admin' };
     }
 
