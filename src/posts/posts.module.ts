@@ -6,6 +6,7 @@ import { PostEntity } from 'src/typeorm/entities/post.entity';
 import { AdminEntity } from 'src/typeorm/entities/admin.entity';
 import { CompanyEntity } from 'src/typeorm/entities/company.entity';
 import { BookmarkEntity } from 'src/typeorm/entities/bookmark.entity';
+import { UserEntity } from 'src/typeorm/entities/user.entity';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { BookmarkEntity } from 'src/typeorm/entities/bookmark.entity';
       AdminEntity,
       CompanyEntity,
       BookmarkEntity,
+      UserEntity,
     ]),
   ],
   controllers: [PostsController],

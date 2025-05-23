@@ -32,14 +32,18 @@ export class QuestionsService {
   async findQuestions(): Promise<ReviewEntity[]> {
     return this.reviewRepository.find({
       where: { isQuestion: true },
-      relations: ['user', 'like', 'like.user']
+      relations: ['user', 'like', 'like.user'],
     });
   }
   async findQuestionById(id: number): Promise<ReviewEntity | undefined> {
-    return this.reviewRepository.findOne({
+    const question = await this.reviewRepository.findOne({
       where: { id: id, isQuestion: true },
-      relations: ['user', 'like', 'like.user']
+      relations: ['user', 'like', 'like.user'],
     });
+    if (!question) {
+      throw new NotFoundException(`Question not found`);
+    }
+    return question;
   }
 
   async findQuestionsByUserId(userId: number): Promise<ReviewEntity[]> {
@@ -50,10 +54,8 @@ export class QuestionsService {
 
     return this.reviewRepository.find({
       where: { user: { id: userId }, isQuestion: true },
-      relations: ['user', 'like', 'like.user']
-
-      }
-  );
+      relations: ['user', 'like', 'like.user'],
+    });
   }
 
   async createQuestion({
@@ -140,9 +142,14 @@ export class QuestionsService {
       where: { id: reviewId, isQuestion: true },
       relations: ['like', 'like.user'],
     });
+    // ตรวจสอบว่ารีวิวหรือผู้ใช้มีอยู่ในฐานข้อมูลหรือไม่
+    if (!review) {
+      // ถ้าไม่พบรีวิว
+      throw new NotFoundException('Question not found');
+    }
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!review || !user) throw new NotFoundException('Post or User not found');
+    if (!review || !user) throw new NotFoundException('User not found');
 
     const existingLike = review.like.find((like) => like.user.id === user.id);
 
@@ -169,11 +176,14 @@ export class QuestionsService {
     const review = await this.reviewRepository.findOne({
       where: { id: comment.review, isQuestion: true },
     });
-
+    // ถ้าไม่พบรีวิว
+    if (!review) {
+      throw new NotFoundException('Question not found');
+    }
     const user = await this.userRepository.findOne({
       where: { id: comment.user },
     });
-    if (!review || !user) throw new NotFoundException('Post or User not found');
+    if (!user) throw new NotFoundException('User not found');
 
     const newComment = this.commentRepository.create({
       date: comment.date,
@@ -190,13 +200,16 @@ export class QuestionsService {
       relations: ['user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
     });
   }
-  
-  async updateComment(commentId: number, updateData: Partial<CommentEntity>): Promise<CommentEntity> {
+
+  async updateComment(
+    commentId: number,
+    updateData: Partial<CommentEntity>,
+  ): Promise<CommentEntity> {
     const comment = await this.findCommentById(commentId);
     if (!comment) {
       throw new NotFoundException('Comment not found');
     }
-  
+
     Object.assign(comment, updateData);
     return this.commentRepository.save(comment);
   }
@@ -206,14 +219,14 @@ export class QuestionsService {
     if (!comment) {
       throw new NotFoundException('Comment not found');
     }
-  
+
     await this.commentRepository.remove(comment);
   }
 
   async getComments(questionId: number): Promise<CommentEntity[]> {
     const comments = await this.commentRepository.find({
       where: { review: { id: questionId } },
-      relations: ['user', 'review']
+      relations: ['user', 'review'],
     });
     return comments;
   }

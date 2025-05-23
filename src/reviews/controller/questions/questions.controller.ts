@@ -82,7 +82,10 @@ export class QuestionsController {
       );
     }
 
-    const updatedQuestion = await this.questionService.updateQuestion(id, updateQuestionDto);
+    const updatedQuestion = await this.questionService.updateQuestion(
+      id,
+      updateQuestionDto,
+    );
 
     return {
       success: true,
@@ -144,7 +147,10 @@ export class QuestionsController {
     const userId = req.user.userId;
     const result = await this.questionService.likeQuestion(reviewId, userId);
     if (result === null) {
-      return { message: 'Post unliked successfully' };
+      return { message: 'Question unliked successfully' };
+    }
+    if (result) {
+      return { message: 'Question liked successfully', result };
     }
     return result;
   }
@@ -172,7 +178,11 @@ export class QuestionsController {
     };
 
     const result = await this.questionService.CommnentQuestion(commentContent);
-    return result;
+    return {
+      success: true,
+      message: 'Comment added successfully', // Success message
+      comment: result, // ข้อมูลคอมเมนต์ที่ถูกเพิ่ม
+    };
   }
 
   @Put(':questionId/comment/:commentId')
@@ -198,7 +208,9 @@ export class QuestionsController {
       );
     }
 
-    const updatedComment = await this.questionService.updateComment(commentId, { text });
+    const updatedComment = await this.questionService.updateComment(commentId, {
+      text,
+    });
     return {
       success: true,
       message: 'Comment updated successfully',

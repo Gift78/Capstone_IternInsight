@@ -51,4 +51,7 @@ export class PostEntity {
 
   @Column()
   image: string;
+
+  @OneToMany(() => BookmarkEntity, (bookmark) => bookmark.post)
+  bookmarks: BookmarkEntity[];
 }

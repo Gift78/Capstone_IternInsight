@@ -20,9 +20,9 @@ export class RegisterService {
 
     if (existingUser) {
       if (existingUser.username === username) {
-        throw new HttpException('Username is already taken', 404);
+        throw new HttpException('Username is already taken', 409);
       } else if (existingUser.email === email) {
-        throw new HttpException('Email is already registered', 404);
+        throw new HttpException('Email is already registered', 409);
       }
     }
 

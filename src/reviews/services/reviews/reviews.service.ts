@@ -39,10 +39,14 @@ export class ReviewsService {
   }
 
   async findReviewById(id: number): Promise<ReviewEntity | undefined> {
-    return this.reviewRepository.findOne({
+    const review = await this.reviewRepository.findOne({
       where: { id: id, isQuestion: false },
       relations: ['user', 'like', 'like.user'],
     });
+    if (!review) {
+      throw new NotFoundException(`Review not found`);
+    }
+    return review;
   }
 
   async findReviewsByUserId(userId: number): Promise<ReviewEntity[]> {
@@ -138,9 +142,14 @@ export class ReviewsService {
       where: { id: reviewId, isQuestion: false },
       relations: ['like', 'like.user'],
     });
+    // ตรวจสอบว่ารีวิวหรือผู้ใช้มีอยู่ในฐานข้อมูลหรือไม่
+    if (!review) {
+      // ถ้าไม่พบรีวิว
+      throw new NotFoundException('Review not found');
+    }
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!review || !user) throw new NotFoundException('Post or User not found');
+    if (!user) throw new NotFoundException('User not found');
 
     const existingLike = review.like.find((like) => like.user.id === user.id);
 
@@ -167,11 +176,16 @@ export class ReviewsService {
     const review = await this.reviewRepository.findOne({
       where: { id: comment.review, isQuestion: false },
     });
+    // ถ้าไม่พบรีวิว
+    if (!review) {
+      throw new NotFoundException('Review not found');
+    }
 
+    // ค้นหาผู้ใช้ในฐานข้อมูล
     const user = await this.userRepository.findOne({
       where: { id: comment.user },
     });
-    if (!review || !user) throw new NotFoundException('Post or User not found');
+    if (!user) throw new NotFoundException('User not found');
 
     const newComment = this.commentRepository.create({
       date: comment.date,
@@ -200,13 +214,16 @@ export class ReviewsService {
       relations: ['user'], // โหลดข้อมูลผู้ใช้ที่เกี่ยวข้อง
     });
   }
-  
-  async updateComment(commentId: number, updateData: Partial<CommentEntity>): Promise<CommentEntity> {
+
+  async updateComment(
+    commentId: number,
+    updateData: Partial<CommentEntity>,
+  ): Promise<CommentEntity> {
     const comment = await this.findCommentById(commentId);
     if (!comment) {
       throw new NotFoundException('Comment not found');
     }
-  
+
     Object.assign(comment, updateData);
     return this.commentRepository.save(comment);
   }
@@ -216,7 +233,7 @@ export class ReviewsService {
     if (!comment) {
       throw new NotFoundException('Comment not found');
     }
-  
+
     await this.commentRepository.remove(comment);
   }
   // create function forceDeleteLike input reviewId: number and remove all like from reviewId
@@ -233,4 +250,3 @@ export class ReviewsService {
     await this.likedRepository.remove(review.like);
   }
 }
-  

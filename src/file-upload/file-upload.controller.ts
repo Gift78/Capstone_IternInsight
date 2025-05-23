@@ -14,6 +14,7 @@ export class FileUploadController {
 
   @Post('single')
   @UseInterceptors(FileInterceptor('image'))
+  
   async uploadSingle(@UploadedFile() image: BufferedFile) {
     return await this.fileUploadService.uploadSingle(image);
   }
